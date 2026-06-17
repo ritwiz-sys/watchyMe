@@ -18,9 +18,23 @@ const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:5173')
   .map(s => s.trim())
   .filter(Boolean)
 
+// Netlify gives every deploy (production + previews + branch deploys) its
+// own subdomain, e.g. https://<hash>--watchyme.netlify.app, in addition to
+// the stable https://watchyme.netlify.app. Build a regex per *.netlify.app
+// base domain found in CLIENT_URLS so all of its deploy URLs are allowed too.
+const NETLIFY_PATTERNS = CLIENT_URLS
+  .filter(u => /\.netlify\.app$/.test(new URL(u).hostname))
+  .map(u => {
+    const host = new URL(u).hostname // e.g. watchyme.netlify.app
+    const escaped = host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return new RegExp(`^https:\\/\\/([a-z0-9-]+--)?${escaped}$`)
+  })
+
 const corsOriginCheck = (origin, cb) => {
   // no origin = same-origin / curl / server-to-server — allow
-  if (!origin || CLIENT_URLS.includes(origin)) return cb(null, true)
+  if (!origin) return cb(null, true)
+  if (CLIENT_URLS.includes(origin)) return cb(null, true)
+  if (NETLIFY_PATTERNS.some(re => re.test(origin))) return cb(null, true)
   cb(new Error(`Origin ${origin} not allowed by CORS`))
 }
 
