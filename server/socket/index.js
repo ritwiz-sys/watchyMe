@@ -9,9 +9,9 @@ import { registerFriendHandlers }    from './friendHandlers.js'
 import { registerCommunityHandlers } from './communityHandlers.js'
 import { log } from '../utils/logger.js'
 
-export function initSocket(httpServer, clientUrl) {
+export function initSocket(httpServer, clientUrls) {
   const io = new Server(httpServer, {
-    cors: { origin: clientUrl, methods: ['GET', 'POST'] },
+    cors: { origin: clientUrls, methods: ['GET', 'POST'] },
     pingInterval: 25_000,
     pingTimeout:  20_000,
   })

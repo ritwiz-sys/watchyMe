@@ -8,12 +8,25 @@ import livekitRoutes    from './routes/livekit.js'
 import communityRoutes  from './routes/communities.js'
 import { log } from './utils/logger.js'
 
-const PORT       = process.env.PORT       || 4000
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173'
+const PORT = process.env.PORT || 4000
+
+// CLIENT_URL may be a single origin or a comma-separated list
+// (e.g. "http://localhost:5173,https://watchyme.netlify.app")
+// so the same server can accept both local dev and the deployed site.
+const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean)
+
+const corsOriginCheck = (origin, cb) => {
+  // no origin = same-origin / curl / server-to-server — allow
+  if (!origin || CLIENT_URLS.includes(origin)) return cb(null, true)
+  cb(new Error(`Origin ${origin} not allowed by CORS`))
+}
 
 /* ── express ─────────────────────────────────────────────────── */
 const app = express()
-app.use(cors({ origin: CLIENT_URL }))
+app.use(cors({ origin: corsOriginCheck }))
 app.use(express.json())
 
 // silence Chrome DevTools probes
@@ -31,11 +44,11 @@ app.use((_req, res) => res.status(404).json({ error: 'Not found' }))
 
 /* ── socket.io ───────────────────────────────────────────────── */
 const httpServer = createServer(app)
-initSocket(httpServer, CLIENT_URL)
+initSocket(httpServer, CLIENT_URLS)
 
 /* ── start ───────────────────────────────────────────────────── */
 httpServer.listen(PORT, () => {
   log.ok(`\n  🚀 WatchyMe server  →  http://localhost:${PORT}`)
   log.ok(`  📡 Socket.io ready`)
-  log.ok(`  🌐 Accepting connections from ${CLIENT_URL}\n`)
+  log.ok(`  🌐 Accepting connections from ${CLIENT_URLS.join(', ')}\n`)
 })
