@@ -7,9 +7,8 @@ import {
   ParticipantEvent,
 } from 'livekit-client'
 
-const LK_URL = import.meta.env.VITE_LIVEKIT_URL || ''
-const socket = io(import.meta.env.VITE_SERVER_URL)  || 'http://localhost:4000'
-
+const LK_URL = import.meta.env.VITE_LIVEKIT_URL
+const socket = io(import.meta.env.VITE_SERVER_URL)
 /**
  * useLiveKit({ roomCode, identity, displayName, enabled })
  *
