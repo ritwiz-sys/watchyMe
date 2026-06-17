@@ -3,7 +3,7 @@ import { socket } from '../lib/socket'
 import { db } from '../lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 
-const socket = io(import.meta.env.VITE_SERVER_URL) || 'http://localhost:4000'
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
 
 /* ─────────────────────────────────────────────────────────────
    useCommunities
