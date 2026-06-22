@@ -1338,9 +1338,12 @@ export default function Room() {
           screenStreamRef.current = null
           setScreenStream(null)
           setSharing(false)
+          if (lkScreen) lkToggleScreen() // unpublish from LiveKit too
         })
-        /* also publish via LiveKit if connected */
-        if (lkState === 'connected') lkToggleScreen()
+        /* publish the SAME captured track to LiveKit — do not let LiveKit
+           capture its own copy, that double-prompt is what was silently
+           breaking remote delivery */
+        if (lkState === 'connected') lkToggleScreen(stream.getVideoTracks()[0])
       } catch (_) {
         /* user cancelled the picker — do nothing */
       }

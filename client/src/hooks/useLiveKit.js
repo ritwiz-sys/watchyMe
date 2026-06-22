@@ -136,17 +136,33 @@ export function useLiveKit({ roomCode, identity, displayName, enabled = true }) 
     }
   }, [camEnabled])
 
-  const toggleScreen = useCallback(async () => {
+  // Publishes an already-captured MediaStreamTrack (pass it in) to start
+  // sharing, or unpublishes the current screen-share track to stop.
+  // IMPORTANT: don't pass a track to stop, and don't let LiveKit do its
+  // own getDisplayMedia() capture here — the caller already captured the
+  // track itself, and calling getDisplayMedia twice (once natively, once
+  // inside LiveKit) triggers a second permission prompt that silently
+  // fails because it runs outside the original user-gesture call stack,
+  // which is why remote viewers never received the track before.
+  const toggleScreen = useCallback(async (track) => {
     const r = roomRef.current
     if (!r) return
-    const next = !screenSharing
     try {
-      await r.localParticipant.setScreenShareEnabled(next)
-      setScreenSharing(next)
+      if (track) {
+        await r.localParticipant.publishTrack(track, {
+          source: Track.Source.ScreenShare,
+          name:   'screen',
+        })
+        setScreenSharing(true)
+      } else {
+        const pub = r.localParticipant.getTrackPublication(Track.Source.ScreenShare)
+        if (pub?.track) await r.localParticipant.unpublishTrack(pub.track)
+        setScreenSharing(false)
+      }
     } catch (e) {
       console.warn('[LiveKit] toggleScreen failed:', e.message)
     }
-  }, [screenSharing])
+  }, [])
 
   return {
     connectionState,
