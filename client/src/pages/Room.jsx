@@ -925,19 +925,25 @@ function DevicePicker({ open, onClose, devices, selectedCam, setSelectedCam, sel
    GAMES VIEW  (lobby + all 4 games)
 ════════════════════════════════════════════ */
 const GCARDS = [
-  { id:'trivia',    emoji:'🎯', name:'Trivia Quiz',   desc:'5 rapid-fire questions, time-bonus scoring', players:'2-8', color:'#7c3aed' },
-  { id:'rps',       emoji:'✂️',  name:'Rock Paper ✂',  desc:'Classic best-of-3. Fast & ruthless.',        players:'2',   color:'#3b82f6' },
-  { id:'wordchain', emoji:'🔤', name:'Word Chain',     desc:'Chain words by last letter. No repeats!',   players:'2-8', color:'#22c55e' },
-  { id:'draw',      emoji:'🎨', name:'Draw & Guess',  desc:'One draws, everyone guesses. Pure chaos.',   players:'2-8', color:'#f59e0b' },
+  { id:'trivia',    emoji:'🎯', name:'Trivia Quiz',       desc:'5 rapid-fire questions, time-bonus scoring',       players:'2-8', color:'#7c3aed' },
+  { id:'draw',      emoji:'🎨', name:'Draw & Guess',      desc:'One draws, everyone guesses the word.',             players:'2-8', color:'#f59e0b' },
+  { id:'wyr',       emoji:'🤔', name:'Would You Rather',  desc:'Vote A or B — see what the group picks.',           players:'2-8', color:'#ec4899' },
+  { id:'mlt',       emoji:'👑', name:'Most Likely To',    desc:'Vote for who in the room fits each prompt.',        players:'2-8', color:'#14b8a6' },
+  { id:'emoji',     emoji:'🧩', name:'Emoji Riddle',      desc:'Guess the movie or show from emoji clues.',         players:'2-8', color:'#f97316' },
+  { id:'wordchain', emoji:'🔤', name:'Word Chain',         desc:'Chain words by last letter. No repeats!',           players:'2-8', color:'#22c55e' },
+  { id:'rps',       emoji:'✂️',  name:'Rock Paper ✂',      desc:'Classic best-of-3. Fast & ruthless.',               players:'2',   color:'#3b82f6' },
 ]
 const OC = ['#7c3aed','#3b82f6','#22c55e','#f59e0b']
 const RPS_C = [{id:'rock',emoji:'🪨',label:'Rock'},{id:'paper',emoji:'📄',label:'Paper'},{id:'scissors',emoji:'✂️',label:'Scissors'}]
 
 function GamesView({ game, members, isHost, onStart, onAction, onEnd, selfId }) {
-  const [wcIn,  setWcIn]  = useState('')
-  const [wcErr, setWcErr] = useState('')
-  const [lAns,  setLAns]  = useState(null)
+  const [wcIn,    setWcIn]    = useState('')
+  const [wcErr,   setWcErr]   = useState('')
+  const [lAns,    setLAns]    = useState(null)
+  const [emojiIn, setEmojiIn] = useState('')
+  const [emojiOk, setEmojiOk] = useState(null) // null | true | false
   useEffect(() => { setLAns(null) }, [game?.qIndex])
+  useEffect(() => { setEmojiOk(null); setEmojiIn('') }, [game?.rIndex])
 
   /* ── lobby ── */
   if (!game) return (
@@ -1152,6 +1158,209 @@ function GamesView({ game, members, isHost, onStart, onAction, onEnd, selfId }) 
             <button onClick={go} disabled={!myTurn} style={{ padding:'11px 20px', borderRadius:12, border:'none', background:myTurn?'#22c55e':'#374151', color:'white', fontWeight:800, fontSize:13, cursor:myTurn?'pointer':'default', fontFamily:'Outfit,sans-serif' }}>Go →</button>
           </div>
           <div style={{ fontSize:12, color:'#4b5563', textAlign:'center' }}>{(game.chain||[]).length} words · {Object.values(game.scores||{}).reduce((a,b)=>a+b,0)} total pts</div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── would you rather ── */
+  if (game.type === 'wyr') {
+    const q       = game.current
+    const myVote  = game.votes?.[selfId]
+    const reveal  = game.phase === 'reveal'
+    const aCount  = game.results?.aCount ?? 0
+    const bCount  = game.results?.bCount ?? 0
+    const total   = aCount + bCount || 1
+    return (
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <Strip members={members} scores={game.scores} />
+        <div style={{ flex:1, overflowY:'auto', padding:20, display:'flex', flexDirection:'column', gap:14 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <span style={{ fontSize:11, color:'#ec4899', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em' }}>Would You Rather</span>
+              <span style={{ fontSize:11, color:'#4b5563', marginLeft:8 }}>{game.qIndex+1}/{game.totalQ}</span>
+            </div>
+            {isHost && <button onClick={onEnd} style={{ fontSize:11, color:'#6b7280', background:'none', border:'none', cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>End</button>}
+          </div>
+          {['A','B'].map((opt, i) => {
+            const text  = i === 0 ? q?.a : q?.b
+            const count = i === 0 ? aCount : bCount
+            const pct   = reveal ? Math.round((count/total)*100) : 0
+            const voted = myVote === opt
+            const isMaj = reveal && game.results?.majority === opt
+            return (
+              <button key={opt} disabled={!!myVote || reveal}
+                onClick={() => { if (!myVote) onAction({ vote: opt }) }}
+                style={{
+                  padding:'18px 20px', borderRadius:18, textAlign:'left', fontFamily:'Outfit,sans-serif',
+                  border:`1.5px solid ${voted||isMaj ? '#ec4899' : 'rgba(255,255,255,.1)'}`,
+                  background: voted||isMaj ? 'rgba(236,72,153,.15)' : 'rgba(255,255,255,.04)',
+                  cursor: myVote||reveal ? 'default' : 'pointer',
+                  position:'relative', overflow:'hidden', transition:'all .2s',
+                }}>
+                {reveal && (
+                  <div style={{ position:'absolute', left:0, top:0, bottom:0, width:`${pct}%`, background:'rgba(236,72,153,.12)', transition:'width .6s ease', borderRadius:16 }} />
+                )}
+                <div style={{ position:'relative', display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:28, height:28, borderRadius:10, background:'rgba(236,72,153,.2)', border:'1px solid rgba(236,72,153,.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, color:'#f472b6', flexShrink:0 }}>{opt}</div>
+                  <span style={{ fontSize:14, fontWeight:700, color:'white', flex:1, lineHeight:1.4 }}>{text}</span>
+                  {reveal && <span style={{ fontSize:14, fontWeight:900, color:'#ec4899', flexShrink:0 }}>{pct}%</span>}
+                </div>
+              </button>
+            )
+          })}
+          {myVote && !reveal && (
+            <div style={{ textAlign:'center', fontSize:13, color:'#9ca3af', fontWeight:600 }}>
+              You chose <strong style={{ color:'#ec4899' }}>{myVote}</strong> — waiting for others…
+            </div>
+          )}
+          {reveal && (
+            <div style={{ textAlign:'center', padding:12, borderRadius:14, background:'rgba(236,72,153,.08)', border:'1px solid rgba(236,72,153,.2)', fontSize:13, color:'#f472b6', fontWeight:700 }}>
+              {aCount} vs {bCount} — {game.results?.majority === 'A' ? q?.a : q?.b} wins!
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  /* ── most likely to ── */
+  if (game.type === 'mlt') {
+    const myVote = game.votes?.[selfId]
+    const reveal = game.phase === 'reveal'
+    const nm     = id => members.find(m=>m.socketId===id)?.name?.split(' ')[0] || 'Someone'
+    const av     = id => members.find(m=>m.socketId===id)?.avatar
+    const tally  = game.results?.tally || {}
+    const winners = game.results?.winners || []
+    return (
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <Strip members={members} scores={game.scores} />
+        <div style={{ flex:1, overflowY:'auto', padding:20, display:'flex', flexDirection:'column', gap:14 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <span style={{ fontSize:11, color:'#14b8a6', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em' }}>Most Likely To</span>
+              <span style={{ fontSize:11, color:'#4b5563', marginLeft:8 }}>{game.qIndex+1}/{game.totalQ}</span>
+            </div>
+            {isHost && <button onClick={onEnd} style={{ fontSize:11, color:'#6b7280', background:'none', border:'none', cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>End</button>}
+          </div>
+          <div style={{ padding:20, borderRadius:18, background:'rgba(20,184,166,.1)', border:'1px solid rgba(20,184,166,.25)', textAlign:'center' }}>
+            <div style={{ fontSize:11, color:'#5eead4', fontWeight:700, marginBottom:8, textTransform:'uppercase', letterSpacing:'.06em' }}>Who is most likely to…</div>
+            <div style={{ fontSize:20, fontWeight:900, color:'white', lineHeight:1.4 }}>{game.current}</div>
+          </div>
+          {!myVote && !reveal && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              {(game.players||[]).filter(id => id !== selfId).map(id => (
+                <button key={id} onClick={() => onAction({ vote: id })}
+                  style={{ padding:'12px 14px', borderRadius:14, border:'1px solid rgba(20,184,166,.25)', background:'rgba(20,184,166,.08)', cursor:'pointer', display:'flex', alignItems:'center', gap:10, fontFamily:'Outfit,sans-serif', transition:'all .2s' }}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(20,184,166,.6)';e.currentTarget.style.background='rgba(20,184,166,.18)'}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(20,184,166,.25)';e.currentTarget.style.background='rgba(20,184,166,.08)'}}>
+                  <img src={AV(av(id),30)} style={{ width:30, height:30, borderRadius:'50%' }} />
+                  <span style={{ fontSize:13, fontWeight:700, color:'white' }}>{nm(id)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {myVote && !reveal && (
+            <div style={{ textAlign:'center', fontSize:13, color:'#9ca3af', fontWeight:600 }}>
+              You voted for <strong style={{ color:'#14b8a6' }}>{nm(myVote)}</strong> — waiting for others…
+            </div>
+          )}
+          {reveal && (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {(game.players||[]).map(id => {
+                const votes  = tally[id] || 0
+                const isWin  = winners.includes(id)
+                return (
+                  <div key={id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', borderRadius:14, background: isWin?'rgba(20,184,166,.12)':'rgba(255,255,255,.04)', border:`1px solid ${isWin?'rgba(20,184,166,.4)':'rgba(255,255,255,.07)'}` }}>
+                    <img src={AV(av(id),32)} style={{ width:32, height:32, borderRadius:'50%' }} />
+                    <span style={{ flex:1, fontSize:13, fontWeight:700, color:'white' }}>{nm(id)}{id===selfId?' (You)':''}</span>
+                    {isWin && <span style={{ fontSize:16 }}>👑</span>}
+                    <span style={{ fontSize:13, fontWeight:800, color: isWin?'#14b8a6':'#6b7280' }}>{votes} vote{votes!==1?'s':''}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  /* ── emoji riddle ── */
+  if (game.type === 'emoji') {
+    const reveal   = game.phase === 'reveal'
+    const alreadyCorrect = game.correctGuessers?.includes(selfId)
+    const submitEmoji = () => {
+      if (!emojiIn.trim() || alreadyCorrect || reveal) return
+      onAction({ guess: emojiIn.trim() }, res => {
+        if (res?.correct) { setEmojiOk(true) }
+        else { setEmojiOk(false); setTimeout(() => setEmojiOk(null), 1000) }
+        setEmojiIn('')
+      })
+    }
+    return (
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <Strip members={members} scores={game.scores} />
+        <div style={{ flex:1, overflowY:'auto', padding:20, display:'flex', flexDirection:'column', gap:14 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <span style={{ fontSize:11, color:'#f97316', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em' }}>Emoji Riddle</span>
+              <span style={{ fontSize:11, color:'#4b5563', marginLeft:8 }}>{game.rIndex+1}/{game.totalR}</span>
+            </div>
+            {isHost && <button onClick={onEnd} style={{ fontSize:11, color:'#6b7280', background:'none', border:'none', cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>End</button>}
+          </div>
+          {/* countdown bar */}
+          <div style={{ height:4, borderRadius:4, background:'rgba(255,255,255,.08)', overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${(game.timeLeft/30)*100}%`, borderRadius:4, background: game.timeLeft > 10 ? '#f97316' : '#ef4444', transition:'width 1s linear' }} />
+          </div>
+          {/* emoji display */}
+          <div style={{ padding:28, borderRadius:20, background:'rgba(249,115,22,.1)', border:'1px solid rgba(249,115,22,.25)', textAlign:'center' }}>
+            <div style={{ fontSize:44, letterSpacing:8, marginBottom:12 }}>{game.current?.emojis}</div>
+            <div style={{ fontSize:11, color:'#9ca3af', fontWeight:600 }}>What movie / TV show is this? · {game.timeLeft}s left</div>
+          </div>
+          {/* reveal answer */}
+          {reveal && (
+            <div style={{ padding:16, borderRadius:14, background:'rgba(249,115,22,.15)', border:'1px solid rgba(249,115,22,.4)', textAlign:'center' }}>
+              <div style={{ fontSize:11, color:'#f97316', fontWeight:700, marginBottom:4 }}>The answer was…</div>
+              <div style={{ fontSize:20, fontWeight:900, color:'white', textTransform:'capitalize' }}>{game.current?.answer}</div>
+            </div>
+          )}
+          {/* who guessed right */}
+          {(game.correctGuessers||[]).length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {game.correctGuessers.map((id, i) => {
+                const m = members.find(x=>x.socketId===id)
+                const pts = i===0?120:i===1?80:50
+                return (
+                  <div key={id} style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:20, background:'rgba(34,197,94,.1)', border:'1px solid rgba(34,197,94,.3)' }}>
+                    <img src={AV(m?.avatar,20)} style={{ width:20, height:20, borderRadius:'50%' }} />
+                    <span style={{ fontSize:12, fontWeight:700, color:'#86efac' }}>{m?.name?.split(' ')[0]||'?'} +{pts}pts</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {/* input */}
+          {!alreadyCorrect && !reveal && (
+            <div style={{ display:'flex', gap:10 }}>
+              <input
+                value={emojiIn}
+                onChange={e=>{setEmojiIn(e.target.value);setEmojiOk(null)}}
+                onKeyDown={e=>e.key==='Enter'&&submitEmoji()}
+                placeholder="Type your guess…"
+                style={{ flex:1, padding:'11px 14px', borderRadius:12, border:`1px solid ${emojiOk===false?'rgba(239,68,68,.6)':emojiOk===true?'rgba(34,197,94,.6)':'rgba(255,255,255,.15)'}`, background:'rgba(255,255,255,.06)', color:'white', fontSize:13, fontFamily:'Outfit,sans-serif', outline:'none', transition:'border .2s' }} />
+              <button onClick={submitEmoji}
+                style={{ padding:'11px 20px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#f97316,#ea580c)', color:'white', fontWeight:800, fontSize:13, cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>Guess →</button>
+            </div>
+          )}
+          {alreadyCorrect && !reveal && (
+            <div style={{ textAlign:'center', padding:14, borderRadius:14, background:'rgba(34,197,94,.1)', border:'1px solid rgba(34,197,94,.3)', fontSize:13, fontWeight:700, color:'#86efac' }}>
+              ✓ You got it! Waiting for others…
+            </div>
+          )}
+          {emojiOk === false && (
+            <div style={{ textAlign:'center', fontSize:12, color:'#f87171', fontWeight:700 }}>✗ Not quite — try again!</div>
+          )}
         </div>
       </div>
     )

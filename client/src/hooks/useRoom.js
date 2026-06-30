@@ -126,7 +126,7 @@ export function useRoom(code) {
   const reactMessage = useCallback((msgId, emoji) => socket.emit('reactMessage', { msgId, emoji }), [])
   const updateStatus = useCallback((patch)      => socket.emit('updateStatus', patch), [])
   const startGame    = useCallback((type)       => socket.emit('startGame',   { type }), [])
-  const gameAction   = useCallback((payload)    => socket.emit('gameAction',   payload), [])
+  const gameAction   = useCallback((payload, cb) => socket.emit('gameAction',  payload, cb), [])
   const endGame      = useCallback(()           => socket.emit('endGame'), [])
   const setVideo     = useCallback((url)        => socket.emit('setVideo',    { url }), [])
   const stopVideo    = useCallback(()           => socket.emit('stopVideo'), [])
