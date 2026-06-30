@@ -16,12 +16,12 @@ const AV = (url, s = 40) =>
   url || `https://ui-avatars.com/api/?size=${s}&background=7c3aed&color=fff&name=U`
 
 const TILE_BG = [
-  'linear-gradient(135deg,#1e1b4b,#312e81)',
-  'linear-gradient(135deg,#0f172a,#1e3a5f)',
-  'linear-gradient(135deg,#1a1a2e,#16213e)',
-  'linear-gradient(135deg,#111827,#1f2937)',
-  'linear-gradient(135deg,#0c0a1e,#1a0a2e)',
-  'linear-gradient(135deg,#14181f,#1e293b)',
+  'linear-gradient(145deg,#1a1040 0%,#0f0a2e 50%,#1a0e3d 100%)',
+  'linear-gradient(145deg,#0a1628 0%,#0d1f3c 50%,#0f172a 100%)',
+  'linear-gradient(145deg,#120d2e 0%,#1c1040 50%,#0d0a24 100%)',
+  'linear-gradient(145deg,#0e1a22 0%,#0d2030 50%,#0a1520 100%)',
+  'linear-gradient(145deg,#1a0e38 0%,#150c30 50%,#0c0820 100%)',
+  'linear-gradient(145deg,#0d1420 0%,#111c2c 50%,#0a1018 100%)',
 ]
 
 /* ════════════════════════════════════════════
@@ -271,15 +271,17 @@ function Tile({ member, isSelf, big, lkParticipant, localStream }) {
 
   return (
     <div style={{
-      borderRadius: 18, overflow: 'hidden', position: 'relative',
+      borderRadius: 20, overflow: 'hidden', position: 'relative',
       aspectRatio: '16/9', flex: 1, minWidth: 0, background: bg,
-      border:    speaking ? '2.5px solid #22c55e' : '1.5px solid rgba(255,255,255,.08)',
+      border:    speaking ? '2px solid rgba(34,197,94,.7)' : '1px solid rgba(255,255,255,.07)',
       boxShadow: speaking
-        ? '0 0 0 3px rgba(34,197,94,.35), 0 0 22px rgba(34,197,94,.6), 0 0 48px rgba(34,197,94,.25)'
-        : '0 4px 24px rgba(0,0,0,.45)',
+        ? '0 0 0 3px rgba(34,197,94,.25), 0 0 24px rgba(34,197,94,.55), 0 0 60px rgba(34,197,94,.2), 0 8px 32px rgba(0,0,0,.6)'
+        : '0 8px 32px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.05) inset',
       animation:  speaking ? 'speakGlow 1.2s ease-in-out infinite' : 'none',
       transition: 'border .18s, box-shadow .18s',
     }}>
+      {/* top glare line */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent)', zIndex:10, pointerEvents:'none' }} />
       {/* LiveKit video overlay */}
       {hasLKVideo && (
         <div style={{ position:'absolute', inset:0, zIndex:1 }}>
@@ -311,14 +313,18 @@ function Tile({ member, isSelf, big, lkParticipant, localStream }) {
         </div>
       </div>
       {/* name bar */}
-      <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'28px 12px 10px', background:'linear-gradient(to top,rgba(0,0,0,.85),transparent)' }}>
+      <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'36px 12px 11px', background:'linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.6) 50%,transparent 100%)' }}>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          {speaking && <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', flexShrink:0 }} />}
-          <span style={{ fontSize:12, fontWeight:700, color:'white', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          {speaking && (
+            <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px #22c55e', flexShrink:0, animation:'wPulse 1.2s ease-in-out infinite' }} />
+          )}
+          <span style={{ fontSize:12, fontWeight:700, color: speaking ? '#f0fdf4' : 'rgba(255,255,255,.92)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', letterSpacing:'-.01em' }}>
             {isSelf ? 'You' : name}
           </span>
-          {muted   && <MicOff   size={11} color="#ef4444" />}
-          {camOff  && <VideoOff size={11} color="#f59e0b" />}
+          <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+            {muted   && <div style={{ width:18, height:18, borderRadius:6, background:'rgba(239,68,68,.18)', display:'flex', alignItems:'center', justifyContent:'center' }}><MicOff   size={10} color="#f87171" /></div>}
+            {camOff  && <div style={{ width:18, height:18, borderRadius:6, background:'rgba(245,158,11,.15)', display:'flex', alignItems:'center', justifyContent:'center' }}><VideoOff size={10} color="#fbbf24" /></div>}
+          </div>
         </div>
       </div>
     </div>
@@ -1413,38 +1419,55 @@ export default function Room() {
 
   /* ── Loading ── */
   if (!connected || !roomData) return (
-    <div style={{ height:'100vh', background:'#07071a', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:'Outfit,sans-serif', gap:16 }}>
-      <div style={{ width:64, height:64, borderRadius:'50%', background:'rgba(124,58,237,.15)', border:'2px solid rgba(124,58,237,.4)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <Loader size={28} color="#7c3aed" style={{ animation:'spin 1s linear infinite' }} />
+    <div style={{ height:'100vh', background:'radial-gradient(ellipse at 50% 60%, #0e0a28 0%, #05050f 100%)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:'Outfit,sans-serif', gap:20 }}>
+      <div style={{ position:'relative' }}>
+        <div style={{ position:'absolute', inset:-20, borderRadius:'50%', background:'rgba(124,58,237,.06)', filter:'blur(18px)', animation:'pulse 2s ease-in-out infinite' }} />
+        <div style={{ width:72, height:72, borderRadius:'50%', background:'linear-gradient(135deg,rgba(124,58,237,.2),rgba(109,40,217,.08))', border:'1.5px solid rgba(124,58,237,.5)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', backdropFilter:'blur(12px)' }}>
+          <Loader size={28} color="#a78bfa" style={{ animation:'spin 1s linear infinite' }} />
+        </div>
       </div>
-      <div style={{ fontSize:15, color:'#6b7280', fontWeight:600 }}>Connecting to room…</div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div>
+        <div style={{ fontSize:15, color:'white', fontWeight:700, textAlign:'center' }}>Joining room…</div>
+        <div style={{ fontSize:12, color:'#4b5563', fontWeight:500, textAlign:'center', marginTop:4 }}>Setting up your connection</div>
+      </div>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.8;transform:scale(1.1)}}
+      `}</style>
     </div>
   )
 
   return (
-    <div style={{ display:'flex', height:'100vh', background:'#07071a', fontFamily:'Outfit,sans-serif', color:'white', overflow:'hidden', position:'relative' }}>
+    <div style={{ display:'flex', height:'100vh', background:'#050510', fontFamily:'Outfit,sans-serif', color:'white', overflow:'hidden', position:'relative' }}>
+      {/* Ambient background lights — purely decorative */}
+      <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0 }}>
+        <div style={{ position:'absolute', top:'-10%', left:'20%', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle, rgba(109,40,217,.07) 0%, transparent 70%)', filter:'blur(40px)' }} />
+        <div style={{ position:'absolute', bottom:'-5%', right:'15%', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(59,130,246,.05) 0%, transparent 70%)', filter:'blur(40px)' }} />
+        <div style={{ position:'absolute', top:'40%', left:'-5%', width:350, height:350, borderRadius:'50%', background:'radial-gradient(circle, rgba(124,58,237,.04) 0%, transparent 70%)', filter:'blur(30px)' }} />
+      </div>
       <style>{`
         @keyframes bPulse    { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.9)} }
         @keyframes sPulse    { 0%,100%{transform:scale(1);opacity:.35} 50%{transform:scale(1.15);opacity:.9} }
         @keyframes wPulse    { 0%,100%{transform:scale(1);opacity:.3} 50%{transform:scale(1.1);opacity:.85} }
         @keyframes toastIn   { from{opacity:0;transform:translateX(110%)} to{opacity:1;transform:translateX(0)} }
         @keyframes spin      { to{transform:rotate(360deg)} }
-        @keyframes modalIn   { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:none} }
+        @keyframes modalIn   { from{opacity:0;transform:scale(.95) translateY(8px)} to{opacity:1;transform:none} }
         @keyframes chatPop   { from{opacity:0;transform:translateY(18px) scale(.97)} to{opacity:1;transform:none} }
         @keyframes sideIn    { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:none} }
+        @keyframes shimmer   { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         @keyframes speakGlow {
-          0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.3), 0 0 14px rgba(34,197,94,.5), 0 0 36px rgba(34,197,94,.18); }
-          50%     { box-shadow: 0 0 0 4px rgba(34,197,94,.55), 0 0 28px rgba(34,197,94,.85), 0 0 60px rgba(34,197,94,.35); }
+          0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.35), 0 0 18px rgba(34,197,94,.55), 0 0 40px rgba(34,197,94,.2); }
+          50%     { box-shadow: 0 0 0 3px rgba(34,197,94,.6), 0 0 32px rgba(34,197,94,.9), 0 0 70px rgba(34,197,94,.38); }
         }
         ::-webkit-scrollbar       { width:3px }
-        ::-webkit-scrollbar-thumb { background:rgba(124,58,237,.3);border-radius:3px }
+        ::-webkit-scrollbar-thumb { background:linear-gradient(180deg,rgba(124,58,237,.5),rgba(109,40,217,.3));border-radius:3px }
+        ::-webkit-scrollbar-track { background:transparent }
       `}</style>
 
       {/* ── TOAST STACK ── */}
       <div style={{ position:'fixed', top:76, right:20, zIndex:9999, display:'flex', flexDirection:'column', gap:8, pointerEvents:'none' }}>
         {toasts.map(t => (
-          <div key={t.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:14, background:'#0e0e2a', border:`1px solid ${t.color}55`, boxShadow:'0 8px 30px rgba(0,0,0,.55)', animation:'toastIn .3s cubic-bezier(.4,0,.2,1) both', minWidth:200, maxWidth:280 }}>
+          <div key={t.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 16px', borderRadius:16, background:'rgba(8,8,24,.95)', border:`1px solid ${t.color}40`, boxShadow:`0 8px 40px rgba(0,0,0,.65), 0 0 0 1px ${t.color}18`, animation:'toastIn .3s cubic-bezier(.4,0,.2,1) both', minWidth:210, maxWidth:290, backdropFilter:'blur(20px)' }}>
             <div style={{ width:30, height:30, borderRadius:'50%', background:`${t.color}20`, border:`1px solid ${t.color}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{t.icon}</div>
             <div style={{ fontSize:13, fontWeight:600, color:'white' }}>{t.msg}</div>
           </div>
@@ -1454,7 +1477,7 @@ export default function Room() {
       {/* ── SHARE MODAL ── */}
       {shareOpen && <>
         <div onClick={()=>setShareOpen(false)} style={{ position:'fixed', inset:0, zIndex:499, background:'rgba(0,0,0,.65)', backdropFilter:'blur(8px)' }} />
-        <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:500, background:'#0d0d24', border:'1px solid rgba(124,58,237,.4)', borderRadius:24, padding:28, width:420, boxShadow:'0 40px 100px rgba(0,0,0,.85)', animation:'modalIn .28s ease both' }}>
+        <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', zIndex:500, background:'rgba(8,8,22,.97)', border:'1px solid rgba(124,58,237,.3)', borderRadius:28, padding:30, width:430, boxShadow:'0 40px 120px rgba(0,0,0,.9), 0 0 0 1px rgba(124,58,237,.08), inset 0 1px 0 rgba(255,255,255,.05)', animation:'modalIn .28s cubic-bezier(.4,0,.2,1) both', backdropFilter:'blur(24px)' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
             <div style={{ fontSize:16, fontWeight:800, color:'white' }}>🔗 Invite People</div>
             <button onClick={()=>setShareOpen(false)} style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,.08)', border:'none', color:'#9ca3af', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
@@ -1486,12 +1509,13 @@ export default function Room() {
       {/* Slide-in panel */}
       <div style={{
         position:'fixed', top:0, left:0, bottom:0, zIndex:300,
-        width:220, background:'#0a0a1e',
-        borderRight:'1px solid rgba(124,58,237,.2)',
+        width:224, background:'rgba(6,6,20,.97)',
+        borderRight:'1px solid rgba(124,58,237,.15)',
         display:'flex', flexDirection:'column',
         transform: sideOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition:'transform .25s cubic-bezier(.4,0,.2,1)',
-        boxShadow: sideOpen ? '6px 0 40px rgba(0,0,0,.6)' : 'none',
+        transition:'transform .28s cubic-bezier(.4,0,.2,1)',
+        boxShadow: sideOpen ? '12px 0 60px rgba(0,0,0,.7), 1px 0 0 rgba(124,58,237,.1)' : 'none',
+        backdropFilter:'blur(24px)',
       }}>
         {/* header */}
         <div style={{ padding:'16px 14px 12px', borderBottom:'1px solid rgba(255,255,255,.06)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -1599,32 +1623,45 @@ export default function Room() {
       <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
 
         {/* Top bar */}
-        <div style={{ height:52, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', borderBottom:'1px solid rgba(255,255,255,.06)', background:'rgba(7,7,26,.95)', backdropFilter:'blur(20px)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div onClick={()=>nav('/home')} style={{ width:34, height:34, borderRadius:10, background:'linear-gradient(135deg,#3b82f6,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:15, cursor:'pointer', flexShrink:0 }}>W</div>
+        <div style={{ height:56, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', borderBottom:'1px solid rgba(255,255,255,.05)', background:'rgba(5,5,16,.92)', backdropFilter:'blur(24px)', position:'relative', zIndex:10 }}>
+          {/* subtle gradient border bottom */}
+          <div style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(124,58,237,.3),rgba(59,130,246,.2),transparent)', pointerEvents:'none' }} />
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div onClick={()=>nav('/home')} style={{ width:36, height:36, borderRadius:12, background:'linear-gradient(135deg,#4f46e5,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:16, cursor:'pointer', flexShrink:0, boxShadow:'0 0 16px rgba(124,58,237,.4), inset 0 1px 0 rgba(255,255,255,.15)' }}>W</div>
             <div>
-              <div style={{ fontSize:14, fontWeight:800, color:'white' }}>{roomData.name}</div>
-              <div style={{ fontSize:11, color:'#6b7280' }}>{roomData.isPrivate?'🔒 Private':'🌐 Public'} · {all.length} members · {fmt(elapsed)}</div>
+              <div style={{ fontSize:14, fontWeight:800, color:'white', letterSpacing:'-.01em' }}>{roomData.name}</div>
+              <div style={{ fontSize:11, color:'#4b5563', fontWeight:500, display:'flex', alignItems:'center', gap:5 }}>
+                <span style={{ color: roomData.isPrivate ? '#f59e0b' : '#6b7280' }}>{roomData.isPrivate ? '🔒' : '🌐'}</span>
+                <span>{roomData.isPrivate ? 'Private' : 'Public'}</span>
+                <span style={{ color:'#374151' }}>·</span>
+                <span>{all.length} {all.length === 1 ? 'person' : 'people'}</span>
+                <span style={{ color:'#374151' }}>·</span>
+                <span style={{ color:'#9ca3af' }}>{fmt(elapsed)}</span>
+              </div>
             </div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ display:'flex' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            {/* stacked avatars */}
+            <div style={{ display:'flex', alignItems:'center' }}>
               {all.slice(0,5).map((m,i) => (
-                <img key={m.socketId} src={AV(m.avatar,24)} style={{ width:24, height:24, borderRadius:'50%', border:'2px solid #07071a', marginLeft:i?-7:0 }} />
+                <img key={m.socketId} src={AV(m.avatar,26)} title={m.name} style={{ width:26, height:26, borderRadius:'50%', border:'2px solid #050510', marginLeft:i?-8:0, boxShadow: m.speaking ? '0 0 8px rgba(34,197,94,.7)' : 'none', transition:'box-shadow .2s' }} />
               ))}
+              {all.length > 5 && (
+                <div style={{ width:26, height:26, borderRadius:'50%', background:'rgba(124,58,237,.2)', border:'2px solid #050510', marginLeft:-8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:800, color:'#a78bfa' }}>+{all.length-5}</div>
+              )}
             </div>
-            <span style={{ fontSize:12, color:'#9ca3af', marginLeft:6 }}>{all.length} in room</span>
             {/* LiveKit status badge */}
             {lkState==='connected' && (
-              <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 9px', borderRadius:20, background:'rgba(34,197,94,.1)', border:'1px solid rgba(34,197,94,.3)', fontSize:10, color:'#4ade80', fontWeight:700, flexShrink:0 }}>
-                <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e' }} />
+              <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:'rgba(34,197,94,.08)', border:'1px solid rgba(34,197,94,.25)', fontSize:10, color:'#4ade80', fontWeight:700, flexShrink:0 }}>
+                <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px #22c55e', animation:'wPulse 2s ease-in-out infinite' }} />
                 Live
               </div>
             )}
-            <button onClick={()=>setShareOpen(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, border:'1px solid rgba(124,58,237,.35)', background:'rgba(124,58,237,.12)', color:'#a78bfa', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>
+            <button onClick={()=>setShareOpen(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:12, border:'1px solid rgba(124,58,237,.3)', background:'rgba(124,58,237,.1)', color:'#c4b5fd', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'Outfit,sans-serif', transition:'all .2s', backdropFilter:'blur(8px)' }}
+              onMouseEnter={e=>{ e.currentTarget.style.background='rgba(124,58,237,.22)'; e.currentTarget.style.borderColor='rgba(124,58,237,.6)' }}
+              onMouseLeave={e=>{ e.currentTarget.style.background='rgba(124,58,237,.1)'; e.currentTarget.style.borderColor='rgba(124,58,237,.3)' }}>
               <Link size={12}/> Invite
             </button>
-            <button onClick={()=>nav('/home')} style={{ padding:'7px 14px', borderRadius:10, border:'none', background:'rgba(239,68,68,.15)', color:'#ef4444', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>Leave</button>
           </div>
         </div>
 
@@ -1632,7 +1669,7 @@ export default function Room() {
         <div style={{ flex:1, display:'flex', minHeight:0, overflow:'hidden' }}>
 
             {/* Left — voice grid / lobby */}
-            <div style={{ flex:1, display:'flex', flexDirection:'column', padding:16, gap:12, minWidth:0, overflow:'hidden' }}>
+            <div style={{ flex:1, display:'flex', flexDirection:'column', padding:14, gap:12, minWidth:0, overflow:'hidden', background:'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,.04) 0%, transparent 60%)' }}>
               {isPresenting ? (
                 /* ─── SCREEN SHARE PRESENTATION MODE ─── */
                 <>
@@ -1844,7 +1881,8 @@ export default function Room() {
           </div>
 
         {/* ── CONTROLS BAR ── */}
-        <div style={{ flexShrink:0, display:'flex', flexDirection:'column', borderTop:'1px solid rgba(255,255,255,.06)', background:'rgba(0,0,0,.45)', backdropFilter:'blur(20px)' }}>
+        <div style={{ flexShrink:0, display:'flex', flexDirection:'column', borderTop:'1px solid rgba(255,255,255,.05)', background:'rgba(4,4,14,.88)', backdropFilter:'blur(28px)', position:'relative', zIndex:10 }}>
+          <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(124,58,237,.25),rgba(59,130,246,.15),transparent)', pointerEvents:'none' }} />
 
           {/* ── WATCH URL INPUT ROW (slides in when watchOpen) ── */}
           {watchOpen && (
@@ -1885,67 +1923,78 @@ export default function Room() {
           )}
 
           {/* ── MAIN BUTTONS ROW ── */}
-          <div style={{ height:74, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px' }}>
+          <div style={{ height:78, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px' }}>
           <div style={{ minWidth:160 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:'white' }}>{roomData.name}</div>
-            <div style={{ fontSize:11, color:'#6b7280' }}>{fmt(elapsed)} · {all.length} people</div>
+            <div style={{ fontSize:13, fontWeight:800, color:'white', letterSpacing:'-.01em' }}>{roomData.name}</div>
+            <div style={{ fontSize:11, color:'#374151', fontWeight:500, marginTop:1 }}>{fmt(elapsed)} · {all.length} {all.length===1?'person':'people'}</div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            {/* device picker shortcut */}
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+
+          {/* ── centre pill of controls ── */}
+          <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.07)', borderRadius:28, padding:'8px 14px', backdropFilter:'blur(12px)', boxShadow:'0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06)' }}>
+            {/* device picker */}
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
               <button onClick={() => setDeviceOpen(true)} title="Choose Camera & Mic"
-                style={{ width:48, height:48, borderRadius:'50%', border:'none', background: deviceOpen?'rgba(124,58,237,.35)':'rgba(255,255,255,.08)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s', position:'relative' }}
-                onMouseEnter={e=>e.currentTarget.style.filter='brightness(1.25)'}
-                onMouseLeave={e=>e.currentTarget.style.filter='none'}>
-                <Settings size={18} color={deviceOpen?'#a78bfa':'#9ca3af'} />
+                style={{ width:44, height:44, borderRadius:'50%', border:'1px solid rgba(255,255,255,.08)', background: deviceOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .18s', position:'relative' }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,.12)';e.currentTarget.style.borderColor='rgba(255,255,255,.18)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background=deviceOpen?'rgba(124,58,237,.3)':'rgba(255,255,255,.06)';e.currentTarget.style.borderColor='rgba(255,255,255,.08)'}}>
+                <Settings size={17} color={deviceOpen?'#a78bfa':'#6b7280'} />
                 {hasPermission === false && (
-                  <div style={{ position:'absolute', top:3, right:3, width:9, height:9, borderRadius:'50%', background:'#ef4444', border:'1.5px solid #07071a' }} />
+                  <div style={{ position:'absolute', top:3, right:3, width:8, height:8, borderRadius:'50%', background:'#ef4444', boxShadow:'0 0 6px #ef4444', border:'1.5px solid #050510' }} />
                 )}
               </button>
-              <span style={{ fontSize:9, color:'#6b7280' }}>Devices</span>
+              <span style={{ fontSize:9, color:'#374151', fontWeight:600, letterSpacing:'.02em' }}>Devices</span>
             </div>
-            <div style={{ width:1, height:36, background:'rgba(255,255,255,.08)', flexShrink:0 }} />
+            <div style={{ width:1, height:32, background:'rgba(255,255,255,.06)', flexShrink:0, margin:'0 2px' }} />
             {[
-              { label:muted?'Unmute':'Mute',           icon:muted      ?<MicOff    size={20} color="#ef4444"/>:<Mic       size={20} color="white"/>, bg:muted      ?'rgba(239,68,68,.25)':'rgba(255,255,255,.1)',  fn: doMuteMic        },
-              { label:camOn?'Stop cam':'Camera',       icon:camOn      ?<Video     size={20} color="white"/> :<VideoOff  size={20} color="#ef4444"/>, bg:!camOn     ?'rgba(239,68,68,.25)':'rgba(255,255,255,.1)',  fn: doToggleCam      },
-              { label:sharing?'Stop share':'Share',    icon:<MonitorUp  size={20} color={sharing?'#22c55e':'white'}/>,                               bg:sharing    ?'rgba(34,197,94,.25)':'rgba(255,255,255,.1)',   fn: doToggleScreen   },
-              { label: watchUrl?'Now Live':'Watch', icon:<Tv size={20} color={watchUrl?'#4ade80':watchOpen?'#60a5fa':'white'}/>, bg:watchUrl?'rgba(34,197,94,.25)':watchOpen?'rgba(59,130,246,.25)':'rgba(255,255,255,.1)', fn:()=>setWatchOpen(w=>!w) },
-              { label:'React',                          icon:<Smile      size={20} color="white"/>,                                                   bg:'rgba(255,255,255,.1)',                                     fn:()=>{}                  },
-              { label:handUp?'Lower':'Hand',           icon:<Hand       size={20} color={handUp?'#f59e0b':'white'}/>,                                bg:handUp     ?'rgba(245,158,11,.25)':'rgba(255,255,255,.1)',  fn:()=>setHandUp(h=>!h)    },
+              { label:muted?'Unmute':'Mute',        icon:muted      ?<MicOff    size={18} color="#f87171"/>:<Mic       size={18} color="#e5e7eb"/>, active:muted,     activeColor:'rgba(239,68,68,.22)',  activeBorder:'rgba(239,68,68,.35)',  fn: doMuteMic        },
+              { label:camOn?'Stop cam':'Camera',    icon:camOn      ?<Video     size={18} color="#e5e7eb"/> :<VideoOff  size={18} color="#f87171"/>, active:!camOn,    activeColor:'rgba(239,68,68,.22)',  activeBorder:'rgba(239,68,68,.35)',  fn: doToggleCam      },
+              { label:sharing?'Stop':'Share',       icon:<MonitorUp  size={18} color={sharing?'#4ade80':'#e5e7eb'}/>,                               active:sharing,   activeColor:'rgba(34,197,94,.2)',   activeBorder:'rgba(34,197,94,.4)',   fn: doToggleScreen   },
+              { label:watchUrl?'Now Live':'Watch',  icon:<Tv         size={18} color={watchUrl?'#4ade80':watchOpen?'#60a5fa':'#e5e7eb'}/>,          active:watchUrl||watchOpen, activeColor:watchUrl?'rgba(34,197,94,.2)':'rgba(59,130,246,.2)', activeBorder:watchUrl?'rgba(34,197,94,.4)':'rgba(59,130,246,.4)', fn:()=>setWatchOpen(w=>!w) },
+              { label:'React',                      icon:<Smile      size={18} color="#e5e7eb"/>,                                                    active:false,     activeColor:'rgba(255,255,255,.06)', activeBorder:'rgba(255,255,255,.08)', fn:()=>{}            },
+              { label:handUp?'Lower':'Hand',        icon:<Hand       size={18} color={handUp?'#fbbf24':'#e5e7eb'}/>,                                active:handUp,    activeColor:'rgba(245,158,11,.2)',   activeBorder:'rgba(245,158,11,.4)',  fn:()=>setHandUp(h=>!h) },
             ].map(btn => (
-              <div key={btn.label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                <button onClick={btn.fn} title={btn.label} style={{ width:48, height:48, borderRadius:'50%', border:'none', background:btn.bg, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}
-                  onMouseEnter={e=>e.currentTarget.style.filter='brightness(1.2)'}
-                  onMouseLeave={e=>e.currentTarget.style.filter='none'}>
+              <div key={btn.label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                <button onClick={btn.fn} title={btn.label}
+                  style={{ width:44, height:44, borderRadius:'50%', border:`1px solid ${btn.active ? btn.activeBorder : 'rgba(255,255,255,.08)'}`, background:btn.active ? btn.activeColor : 'rgba(255,255,255,.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .18s' }}
+                  onMouseEnter={e=>{e.currentTarget.style.background=btn.active?btn.activeColor:'rgba(255,255,255,.12)';e.currentTarget.style.transform='scale(1.06)'}}
+                  onMouseLeave={e=>{e.currentTarget.style.background=btn.active?btn.activeColor:'rgba(255,255,255,.06)';e.currentTarget.style.transform='scale(1)'}}>
                   {btn.icon}
                 </button>
-                <span style={{ fontSize:9, color:'#6b7280' }}>{btn.label}</span>
+                <span style={{ fontSize:9, color:'#374151', fontWeight:600, letterSpacing:'.02em' }}>{btn.label}</span>
               </div>
             ))}
-            <button onClick={()=>nav('/home')} style={{ display:'flex', alignItems:'center', gap:8, padding:'13px 24px', borderRadius:50, border:'none', background:'#ef4444', color:'white', fontWeight:800, fontSize:14, cursor:'pointer', fontFamily:'Outfit,sans-serif', marginLeft:8 }}>
-              <PhoneOff size={18}/> Leave
-            </button>
           </div>
-          {/* right cluster: chat + misc */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:160, justifyContent:'flex-end' }}>
-            {/* Chat toggle button */}
+
+          {/* right: chat + leave */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:160, justifyContent:'flex-end' }}>
+            {/* Chat */}
             <div style={{ position:'relative' }}>
-              <button onClick={()=>setChatOpen(o=>!o)}
-                style={{ width:44, height:44, borderRadius:'50%', border:'none', background: chatOpen?'rgba(124,58,237,.35)':'rgba(255,255,255,.08)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}
-                title="Chat">
-                <MessageSquare size={18} color={chatOpen?'#a78bfa':'#9ca3af'} />
+              <button onClick={()=>setChatOpen(o=>!o)} title="Chat"
+                style={{ width:44, height:44, borderRadius:'50%', border:`1px solid ${chatOpen?'rgba(124,58,237,.5)':'rgba(255,255,255,.08)'}`, background: chatOpen?'rgba(124,58,237,.25)':'rgba(255,255,255,.06)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .18s' }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,.12)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background=chatOpen?'rgba(124,58,237,.25)':'rgba(255,255,255,.06)'}}>
+                <MessageSquare size={18} color={chatOpen?'#c4b5fd':'#6b7280'} />
               </button>
               {unread > 0 && !chatOpen && (
-                <div style={{ position:'absolute', top:-3, right:-3, minWidth:17, height:17, borderRadius:9, background:'#ef4444', border:'2px solid #07071a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'white', padding:'0 3px' }}>
+                <div style={{ position:'absolute', top:-3, right:-3, minWidth:17, height:17, borderRadius:9, background:'linear-gradient(135deg,#ef4444,#dc2626)', border:'2px solid #050510', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'white', padding:'0 3px', boxShadow:'0 0 8px rgba(239,68,68,.5)' }}>
                   {unread > 9 ? '9+' : unread}
                 </div>
               )}
             </div>
             {[Settings, MoreHorizontal].map((Icon,i) => (
-              <button key={i} style={{ width:44, height:44, borderRadius:'50%', border:'none', background:'rgba(255,255,255,.08)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <Icon size={16} color="#9ca3af" />
+              <button key={i} style={{ width:44, height:44, borderRadius:'50%', border:'1px solid rgba(255,255,255,.07)', background:'rgba(255,255,255,.04)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .18s' }}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.1)'}
+                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.04)'}>
+                <Icon size={16} color="#4b5563" />
               </button>
             ))}
+            {/* Leave */}
+            <button onClick={()=>nav('/home')}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'11px 20px', borderRadius:50, border:'1px solid rgba(239,68,68,.35)', background:'rgba(239,68,68,.15)', color:'#f87171', fontWeight:800, fontSize:13, cursor:'pointer', fontFamily:'Outfit,sans-serif', transition:'all .2s', backdropFilter:'blur(8px)' }}
+              onMouseEnter={e=>{ e.currentTarget.style.background='rgba(239,68,68,.3)'; e.currentTarget.style.borderColor='rgba(239,68,68,.6)'; e.currentTarget.style.color='#fca5a5' }}
+              onMouseLeave={e=>{ e.currentTarget.style.background='rgba(239,68,68,.15)'; e.currentTarget.style.borderColor='rgba(239,68,68,.35)'; e.currentTarget.style.color='#f87171' }}>
+              <PhoneOff size={16}/> Leave
+            </button>
           </div>
           </div>{/* end buttons row */}
         </div>{/* end controls bar */}
